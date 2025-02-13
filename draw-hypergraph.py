@@ -4,6 +4,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np  # rewrite all wiht numpy arrays, eliminates all my clunky two generators, much more semantic.
 from matplotlib.path import Path
+from scipy.interpolate import CubicSpline
 
 """
 TODOS
@@ -28,8 +29,8 @@ def setUpMatplotCanvas():
 
 def setUpNodeDicts(nodeCoords):
     nodesInfo = []
-    keys = ["coords", "unitVector", "associatedPolygonPoint","t"]
-    vals = [None for i in range(4)]
+    keys = ["coords", "unitVector", "associatedPolygonPoint"]
+    vals = [None for i in range(3)]
 
     for i, node in enumerate(np.array(nodeCoords)):
         nodesInfo.append(dict(zip(keys, vals)))
@@ -54,11 +55,13 @@ def makeUnitVector(vector):
 def findCentroid(nodesInfo):
     # Take mean average of all coordinates to find the centroid
     centroid = np.array([0, 0])
+    print(centroid)
 
     for node in nodesInfo:
         centroid = np.add(node["coords"], centroid)
     centroid = centroid / 3
 
+    print(centroid)
     return centroid
 
 
@@ -98,64 +101,6 @@ def calculateCircleConnectionPoint(node1, node2, radius, centroid):  # Should be
     plt.plot(circlePoint[0], circlePoint[1], "yo")
     return circlePoint
 
-def calculateBezierControlPoint(
-    nodeFrom, nodeTo, centroid, radius
-):  # should give t value?
-    circleConnectionPoint = calculateCircleConnectionPoint(
-        nodeFrom, nodeTo, radius, centroid
-    )
-    nodeFromDist = magnitude(np.subtract(nodeFrom["coords"], circleConnectionPoint))
-    nodeToDist = magnitude(np.subtract(nodeTo["coords"], circleConnectionPoint))
-    ratioDivisor = nodeToDist + nodeFromDist
-
-    # To get the right t value I need the smaller value divided by the sum, so just chekcing for that.
-    if nodeFromDist > nodeToDist:
-        t = nodeToDist / ratioDivisor
-    else:
-        t = nodeFromDist / ratioDivisor
-    nodeFrom["t"] = t
-
-    # Calculates where to put the control point if I want the curve to start at nodeFrom polygon point, end at nodeTo polygon point, and have the turning point at the circle connection point.
-    # Theory for this is written in full in my first notebook and mainly sourced from https://pomax.github.io/bezierinfo/
-    # Bezier equation for a quadratic is (where x(t) is a function) x(t) = X1(1-t)^2 + (X2)(2)(1-t)(t) + (X3)(t^2).
-    # Rearranged for X3 - The control point - this is X2 = (x(t) - X1(1-t)^2 - (X3)(t^2))/ (2)(1-t)(t)
-    return [
-        (
-            circleConnectionPoint[i]
-            - nodeFrom["associatedPolygonPoint"][i]
-            + (2 * nodeFrom["associatedPolygonPoint"][i] * t)
-            - (nodeFrom["associatedPolygonPoint"][i] * (t**2))
-            - (nodeTo["associatedPolygonPoint"][i] * (t**2))
-        )
-        / (2 * (t - (t**2)))
-        for i in range(2)
-    ]
-
-# def calculateBezierRatios(nodeFrom, nodeTo, centroid):
-
-#     return [nodeFrom["associatedPolygonPoints"], centroid, nodeTo["associatedPolygonPoints"]]
-
-def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid):
-    nodeFromDist = magnitude(np.subtract(nodeFromCoords, centroid))
-    nodeToDist = magnitude(np.subtract(nodeToCoords, centroid))
-    ratioDivisor = nodeToDist + nodeFromDist
-
-    # To get the right t value I need the smaller value divided by the sum, so just chekcing for that.
-    if nodeFromDist > nodeToDist:
-        nodesToCentroidDistanceRatio = nodeToDist / ratioDivisor
-    else:
-        nodesToCentroidDistanceRatio = nodeFromDist / ratioDivisor
-    
-    return nodesToCentroidDistanceRatio
-
-def calculateRatioPointBetweenNodes(nodeFromCoords, nodeToCoords, nodesToCentroidDistanceRatio):
-    nodeToNodeVector = np.subtract(nodeToCoords, nodeFromCoords) # This is right
-    nodeToNodeDist = magnitude(nodeToNodeVector)
-    nodeToNodeDirection = makeUnitVector(nodeToNodeVector)
-
-    ratioPoint = nodeToNodeDirection * (nodeToNodeDist*nodesToCentroidDistanceRatio)
-    ratioPoint = nodeFromCoords + ratioPoint
-    return ratioPoint
 
 # DRAW
 
@@ -173,19 +118,55 @@ def drawNodeToPolygonLine(nodeCoords, polygonPointCoords):
         color="black",
     )
 
-def drawDashedLine(pointFrom, pointTo):
-    plt.plot((pointFrom[0], pointTo[0]),(pointFrom[1], pointTo[1]), "--")
-
 
 def drawCircle(coords, radius, ax):
+    print(coords, type(coords))
     circle = plt.Circle((coords[0], coords[1]), radius, fc="white", ec="black")
     ax.add_patch(circle)
     return ax
 
 
-def drawPoints(points, plt):
-    for point in points:
+def drawCentrePolygonPoints(polygonPoints, plt):
+    for point in polygonPoints:
         plt.plot(point[0], point[1], "ro")
+
+
+def calculateBezierControlPoint(
+    nodeFrom, nodeTo, centroid, radius
+):  # should give t value?
+    circleConnectionPoint = calculateCircleConnectionPoint(
+        nodeFrom, nodeTo, radius, centroid
+    )
+    nodeFromDist = magnitude(np.subtract(nodeFrom["coords"], circleConnectionPoint))
+    nodeToDist = magnitude(np.subtract(nodeTo["coords"], circleConnectionPoint))
+    ratioDivisor = nodeToDist + nodeFromDist
+
+    # To get the right t value I need the smaller value divided by the sum, so just chekcing for that.
+    if nodeFromDist > nodeToDist:
+        t = nodeToDist / ratioDivisor
+    else:
+        t = nodeFromDist / ratioDivisor
+
+    # Calculates where to put the control point if I want the curve to start at nodeFrom polygon point, end at nodeTo polygon point, and have the turning point at the circle connection point.
+    # Theory for this is written in full in my first notebook and mainly sourced from https://pomax.github.io/bezierinfo/
+    # Bezier equation for a quadratic is (where x(t) is a function) x(t) = X1(1-t)^2 + (X2)(2)(1-t)(t) + (X3)(t^2).
+    # Rearranged for X3 - The control point - this is X2 = (x(t) - X1(1-t)^2 - (X3)(t^2))/ (2)(1-t)(t)
+    return [
+        (
+            circleConnectionPoint[i]
+            - nodeFrom["associatedPolygonPoint"][i]
+            + (2 * nodeFrom["associatedPolygonPoint"][i] * t)
+            - (nodeFrom["associatedPolygonPoint"][i] * (t**2))
+            - (nodeTo["associatedPolygonPoint"][i] * (t**2))
+        )
+        / (2 * (t - (t**2)))
+        for i in range(2)
+    ]
+
+
+def tempBeziers(plt):
+    points = [[-260, 220], [260, 220], [0, 20]]
+    drawCentrePolygonPoints(points, plt)
 
 
 fig, ax = setUpMatplotCanvas()
@@ -201,18 +182,13 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
     polygonPoints = calculatePolygonPoints(
         nodesInfo, centroid, radius, polygonPointDistance
     )
-    drawPoints(polygonPoints, plt)
+    drawCentrePolygonPoints(polygonPoints, plt)
 
     for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
-        #controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
-        controlPoint = centroid
-        #plt.plot(controlPoint[0], controlPoint[1], "bo")
-        nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(nodeFrom["coords"], nodeTo["coords"], centroid)
-        #calculateRatioPointBetweenNodes(nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio)
-        ratioPoint = calculateRatioPointBetweenNodes(nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio)
-
+        controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
+        plt.plot(controlPoint[0], controlPoint[1], "bo")
         drawCentreCurve(
             [
                 nodeFrom["associatedPolygonPoint"],
@@ -221,13 +197,9 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
             ]
         )
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
-        drawDashedLine(nodeFrom["coords"], nodeTo["coords"])
-        drawDashedLine(ratioPoint, centroid)
-        drawDashedLine(nodeFrom["coords"], centroid)
-        drawPoints([ratioPoint], plt)
 
 
-#nodesInfo = setUpNodeDicts([[-260, 220], [280, 90], [260, -220], [-260, -150]])
+# nodesInfo = setUpNodeDicts([[-260, 220], [280, 90], [260, -220], [-260, -150]])
 nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
 ##nodesInfo = setUpNodeDicts([[260,220],[500,0],[260,-220]])
 ###nodesInfo = setUpNodeDicts([[260,220],[260,-220]])
