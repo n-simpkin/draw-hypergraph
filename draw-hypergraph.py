@@ -28,7 +28,7 @@ def setUpMatplotCanvas():
 
 def setUpNodeDicts(nodeCoords):
     nodesInfo = []
-    keys = ["coords", "unitVector", "associatedPolygonPoint","t"]
+    keys = ["coords", "unitVector", "associatedPolygonPoint", "t"]
     vals = [None for i in range(4)]
 
     for i, node in enumerate(np.array(nodeCoords)):
@@ -98,6 +98,7 @@ def calculateCircleConnectionPoint(node1, node2, radius, centroid):  # Should be
     plt.plot(circlePoint[0], circlePoint[1], "yo")
     return circlePoint
 
+
 def calculateBezierControlPoint(
     nodeFrom, nodeTo, centroid, radius
 ):  # should give t value?
@@ -131,9 +132,11 @@ def calculateBezierControlPoint(
         for i in range(2)
     ]
 
+
 # def calculateBezierRatios(nodeFrom, nodeTo, centroid):
 
 #     return [nodeFrom["associatedPolygonPoints"], centroid, nodeTo["associatedPolygonPoints"]]
+
 
 def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid):
     nodeFromDist = magnitude(np.subtract(nodeFromCoords, centroid))
@@ -145,17 +148,21 @@ def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid
         nodesToCentroidDistanceRatio = nodeToDist / ratioDivisor
     else:
         nodesToCentroidDistanceRatio = nodeFromDist / ratioDivisor
-    
+
     return nodesToCentroidDistanceRatio
 
-def calculateRatioPointBetweenNodes(nodeFromCoords, nodeToCoords, nodesToCentroidDistanceRatio):
-    nodeToNodeVector = np.subtract(nodeToCoords, nodeFromCoords) # This is right
+
+def calculateRatioPointBetweenNodes(
+    nodeFromCoords, nodeToCoords, nodesToCentroidDistanceRatio
+):
+    nodeToNodeVector = np.subtract(nodeToCoords, nodeFromCoords)  # This is right
     nodeToNodeDist = magnitude(nodeToNodeVector)
     nodeToNodeDirection = makeUnitVector(nodeToNodeVector)
 
-    ratioPoint = nodeToNodeDirection * (nodeToNodeDist*nodesToCentroidDistanceRatio)
+    ratioPoint = nodeToNodeDirection * (nodeToNodeDist * nodesToCentroidDistanceRatio)
     ratioPoint = nodeFromCoords + ratioPoint
     return ratioPoint
+
 
 # DRAW
 
@@ -173,8 +180,9 @@ def drawNodeToPolygonLine(nodeCoords, polygonPointCoords):
         color="black",
     )
 
+
 def drawDashedLine(pointFrom, pointTo):
-    plt.plot((pointFrom[0], pointTo[0]),(pointFrom[1], pointTo[1]), "--")
+    plt.plot((pointFrom[0], pointTo[0]), (pointFrom[1], pointTo[1]), "--")
 
 
 def drawCircle(coords, radius, ax):
@@ -206,12 +214,16 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
     for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
-        #controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
+        # controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
         controlPoint = centroid
-        #plt.plot(controlPoint[0], controlPoint[1], "bo")
-        nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(nodeFrom["coords"], nodeTo["coords"], centroid)
-        #calculateRatioPointBetweenNodes(nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio)
-        ratioPoint = calculateRatioPointBetweenNodes(nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio)
+        # plt.plot(controlPoint[0], controlPoint[1], "bo")
+        nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
+            nodeFrom["coords"], nodeTo["coords"], centroid
+        )
+        # calculateRatioPointBetweenNodes(nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio)
+        ratioPoint = calculateRatioPointBetweenNodes(
+            nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
+        )
 
         drawCentreCurve(
             [
@@ -227,11 +239,11 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
         drawPoints([ratioPoint], plt)
 
 
-#nodesInfo = setUpNodeDicts([[-260, 220], [280, 90], [260, -220], [-260, -150]])
-nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
-##nodesInfo = setUpNodeDicts([[260,220],[500,0],[260,-220]])
+nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
+# nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
+# nodesInfo = setUpNodeDicts([[260, 220], [500, 0], [260, -220]])
 ###nodesInfo = setUpNodeDicts([[260,220],[260,-220]])
-##nodesInfo = setUpNodeDicts([[-260,220],[130,500], [260,220]])
+# nodesInfo = setUpNodeDicts([[-260, 220], [130, 500], [260, 220]])
 
 radius = 25
 nodeRadius = 30
