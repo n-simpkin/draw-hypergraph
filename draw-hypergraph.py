@@ -164,6 +164,20 @@ def calculateRatioPointBetweenNodes(
     return ratioPoint
 
 
+def RationalBezier(t, weights, ratios):
+    # This is basically word for word from https://pomax.github.io/bezierinfo/#weightcontrol
+    # w = [-260, 220], [260, 220], [0, -220]
+    # r = [1, 2, 0.8]
+    t2 = t**2
+    mt = 1 - t
+    mt2 = mt**2
+    f = [ratios[0] * mt2, 2 * ratios[1] * mt * t, ratios[2] * t2]
+    basis = f[0] + f[1] + f[2]
+    return (
+        f[0] * weights[0] + f[1] * weights[1] + f[2] * weights[2]
+    ) / basis  # Gives the coordinates of the given curve at the given t value.
+
+
 # DRAW
 
 
