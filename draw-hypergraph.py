@@ -164,7 +164,7 @@ def calculateRatioPointBetweenNodes(
     return ratioPoint
 
 
-def RationalBezier(t, weights, ratios):
+def calcRationalBezierPoint(t, weights, ratios):
     # This is basically word for word from https://pomax.github.io/bezierinfo/#weightcontrol
     # w = [-260, 220], [260, 220], [0, -220]
     # r = [1, 2, 0.8]
@@ -176,6 +176,19 @@ def RationalBezier(t, weights, ratios):
     return (
         f[0] * weights[0] + f[1] * weights[1] + f[2] * weights[2]
     ) / basis  # Gives the coordinates of the given curve at the given t value.
+
+
+def calculateBezierPlotPointsBySegments(
+    segmentCount, bezierInfo
+):  # Simple approximate curve drawing. Tempoary unitl I can be bothered to make a better one.
+    step = 1 / segmentCount
+    coords = [bezierInfo["weights"][0]]  # Starts coords at start point
+    for i in range(segmentCount):
+        t = step * i
+        coords.append(
+            calcRationalBezierPoint(t, bezierInfo["weights"], bezierInfo["ratios"])
+        )
+    return coords
 
 
 # DRAW
@@ -228,6 +241,10 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
     for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
+        bezierInfo = {
+            "weights": [nodeFrom["coords"], centroid, nodeTo["coords"]],
+            "ratios": [],
+        }
         # controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
         controlPoint = centroid
         # plt.plot(controlPoint[0], controlPoint[1], "bo")
