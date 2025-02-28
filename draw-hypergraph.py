@@ -4,6 +4,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np  # rewrite all wiht numpy arrays, eliminates all my clunky two generators, much more semantic.
 from matplotlib.path import Path
+from matplotlib.widgets import Slider
 
 """
 TODOS
@@ -193,6 +194,20 @@ def calculateBezierPlotPointsBySegments(
 
 
 # DRAW
+
+
+# def addSlider():
+#     axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
+#     ratioSlider = Slider(
+#         ax=axRatio,
+#         label="Control point ratio",
+#         valmin=0,
+#         valmax=2,
+#         valinit=1,
+#     )
+
+# def update(val):
+#     ratio = ratioSlider.val
 
 
 def drawCentreCurve(curveVerts):
