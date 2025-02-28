@@ -52,12 +52,12 @@ def makeUnitVector(vector):
 # CALCULATE
 
 
-def findCentroid(nodesInfo):
+def findCentroid(points):
     # Take mean average of all coordinates to find the centroid
     centroid = np.array([0, 0])
 
-    for node in nodesInfo:
-        centroid = np.add(node["coords"], centroid)
+    for point in points:
+        centroid = np.add(point, centroid)
     centroid = centroid / 3
 
     return centroid
@@ -253,12 +253,12 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
 
     for node in nodesInfo:
         ax = drawCircle(node["coords"], nodeRadius, ax)
-    centroid = findCentroid(nodesInfo)
+    centroid = findCentroid([node["coords"] for node in nodesInfo])
     drawCircle(centroid, radius, ax)
     polygonPoints = calculatePolygonPoints(
         nodesInfo, centroid, radius, polygonPointDistance
     )
-    drawPoints(polygonPoints)
+    # drawPoints(polygonPoints)
 
     for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
@@ -269,7 +269,7 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
                 centroid,
                 nodeTo["associatedPolygonPoint"],
             ],
-            "ratios": [1, 2, 1],
+            "ratios": [1, 1, 1],
         }
         # controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
         controlPoint = centroid
@@ -296,14 +296,14 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
         drawDashedLine(nodeFrom["coords"], nodeTo["coords"])
-        drawDashedLine(ratioPoint, centroid)
+        # drawDashedLine(ratioPoint, centroid)
         drawDashedLine(nodeFrom["coords"], centroid)
-        drawPoints([ratioPoint])
+        # drawPoints([ratioPoint])
 
 
 # nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
 nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
-# nodesInfo = setUpNodeDicts([[260, 220], [500, 0], [260, -220]])
+# nodesInfo = setUpNodeDicts([[260, 220], [100, 0], [260, -220]])
 ###nodesInfo = setUpNodeDicts([[260,220],[260,-220]])
 # nodesInfo = setUpNodeDicts([[-260, 220], [130, 500], [260, 220]])
 
