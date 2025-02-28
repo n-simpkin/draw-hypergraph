@@ -179,11 +179,12 @@ def calcRationalBezierPoint(t, weights, ratios):
 
 
 def calculateBezierPlotPointsBySegments(
-    segmentCount, bezierInfo
+    bezierInfo, segmentCount
 ):  # Simple approximate curve drawing. Tempoary unitl I can be bothered to make a better one.
     step = 1 / segmentCount
-    coords = [bezierInfo["weights"][0]]  # Starts coords at start point
-    for i in range(segmentCount):
+    # coords = [bezierInfo["weights"][0]]  # Starts coords at start point
+    coords = []
+    for i in range(segmentCount + 1):
         t = step * i
         coords.append(
             calcRationalBezierPoint(t, bezierInfo["weights"], bezierInfo["ratios"])
@@ -218,16 +219,22 @@ def drawCircle(coords, radius, ax):
     return ax
 
 
-def drawPoints(points, plt):
+def drawPoints(points):
     for point in points:
         plt.plot(point[0], point[1], "ro")
+
+
+def drawBezierBySegments(coords):
+    Xs = [coordPair[0] for coordPair in coords]
+    Ys = [coordPair[1] for coordPair in coords]
+    plt.plot(Xs, Ys)
 
 
 fig, ax = setUpMatplotCanvas()
 
 
 def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
-    polygonPointDistance = 1
+    polygonPointDistance = 0.6
 
     for node in nodesInfo:
         ax = drawCircle(node["coords"], nodeRadius, ax)
@@ -236,14 +243,18 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
     polygonPoints = calculatePolygonPoints(
         nodesInfo, centroid, radius, polygonPointDistance
     )
-    drawPoints(polygonPoints, plt)
+    drawPoints(polygonPoints)
 
     for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
         bezierInfo = {
-            "weights": [nodeFrom["coords"], centroid, nodeTo["coords"]],
-            "ratios": [],
+            "weights": [
+                nodeFrom["associatedPolygonPoint"],
+                centroid,
+                nodeTo["associatedPolygonPoint"],
+            ],
+            "ratios": [1, 2, 1],
         }
         # controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
         controlPoint = centroid
@@ -251,27 +262,32 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
         nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
             nodeFrom["coords"], nodeTo["coords"], centroid
         )
-        # calculateRatioPointBetweenNodes(nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio)
+        calculateRatioPointBetweenNodes(
+            nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
+        )
         ratioPoint = calculateRatioPointBetweenNodes(
             nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
         )
 
-        drawCentreCurve(
-            [
-                nodeFrom["associatedPolygonPoint"],
-                controlPoint,
-                nodeTo["associatedPolygonPoint"],
-            ]
-        )
+        bezierCoords = calculateBezierPlotPointsBySegments(bezierInfo, 40)
+        # drawCentreCurve(
+        #     [
+        #         nodeFrom["associatedPolygonPoint"],
+        #         controlPoint,
+        #         nodeTo["associatedPolygonPoint"],
+        #     ]
+        # )
+        drawBezierBySegments(bezierCoords)
+
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
         drawDashedLine(nodeFrom["coords"], nodeTo["coords"])
         drawDashedLine(ratioPoint, centroid)
         drawDashedLine(nodeFrom["coords"], centroid)
-        drawPoints([ratioPoint], plt)
+        drawPoints([ratioPoint])
 
 
-nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
-# nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
+# nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
+nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
 # nodesInfo = setUpNodeDicts([[260, 220], [500, 0], [260, -220]])
 ###nodesInfo = setUpNodeDicts([[260,220],[260,-220]])
 # nodesInfo = setUpNodeDicts([[-260, 220], [130, 500], [260, 220]])
