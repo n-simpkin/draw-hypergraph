@@ -21,6 +21,7 @@ Hypergraph class for holding the information?
 
 def setUpMatplotCanvas():
     fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=0.2)
     plt.xlim(-300, 300)
     plt.ylim(-300, 300)
     ax.set_aspect(1)
@@ -242,13 +243,14 @@ def drawPoints(points):
 def drawBezierBySegments(coords):
     Xs = [coordPair[0] for coordPair in coords]
     Ys = [coordPair[1] for coordPair in coords]
-    plt.plot(Xs, Ys)
+    (line,) = ax.plot(Xs, Ys)
+    return line
 
 
 fig, ax = setUpMatplotCanvas()
 
 
-def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
+def drawEdge(radius, nodeRadius, nodesInfo, ax, ratios):  # 2 edgecase and 1
     polygonPointDistance = 0.6
 
     for node in nodesInfo:
@@ -260,7 +262,7 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
     )
     # drawPoints(polygonPoints)
 
-    for nodeFromIndex in range(len(nodesInfo)):
+    for nodeFromIndex in range(len(nodesInfo) - 2):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
         bezierInfo = {
@@ -292,13 +294,14 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
         #         nodeTo["associatedPolygonPoint"],
         #     ]
         # )
-        drawBezierBySegments(bezierCoords)
+        line = drawBezierBySegments(bezierCoords)
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
         drawDashedLine(nodeFrom["coords"], nodeTo["coords"])
-        # drawDashedLine(ratioPoint, centroid)
+        drawDashedLine(ratioPoint, centroid)
         drawDashedLine(nodeFrom["coords"], centroid)
-        # drawPoints([ratioPoint])
+        drawPoints([ratioPoint])
+    return line, bezierInfo
 
 
 # nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
@@ -310,5 +313,39 @@ nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
 radius = 25
 nodeRadius = 30
 
-drawEdge(radius, nodeRadius, nodesInfo, ax)
+line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo, ax, [1, 1, 1])
+
+
+axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
+ratioSlider = Slider(
+    ax=axRatio,
+    label="Control point ratio",
+    valmin=0.00001,
+    valmax=2,
+    valinit=1,
+)
+axRatio2 = fig.add_axes([0.25, 0.05, 0.65, 0.03])
+ratioSlider2 = Slider(
+    ax=axRatio2,
+    label="Other points ratio",
+    valmin=0.00001,
+    valmax=2,
+    valinit=1,
+)
+
+
+def update(val):
+    ratioControlPoint = ratioSlider.val
+    ratioOther = ratioSlider2.val
+    bezierInfo["ratios"] = [ratioOther, ratioControlPoint, ratioOther]
+    coords = calculateBezierPlotPointsBySegments(bezierInfo, 40)
+    Xs = [coordPair[0] for coordPair in coords]
+    Ys = [coordPair[1] for coordPair in coords]
+    line.set_xdata(Xs)
+    line.set_ydata(Ys)
+
+
+ratioSlider.on_changed(update)
+ratioSlider2.on_changed(update)
+
 plt.show()
