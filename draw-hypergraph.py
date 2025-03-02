@@ -208,7 +208,7 @@ def drawBezierBySegments(coords):
 fig, ax = setUpMatplotCanvas()
 
 
-def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
+def drawEdge(radius, nodeRadius, nodesInfo):  # 2 edgecase and 1
     polygonPointDistance = 0.6
 
     for node in nodesInfo:
@@ -262,6 +262,6 @@ nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
 radius = 25
 nodeRadius = 30
 
-line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo, ax)
+line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo)
 
 plt.show()
