@@ -21,7 +21,6 @@ Hypergraph class for holding the information?
 
 def setUpMatplotCanvas():
     fig, ax = plt.subplots()
-    plt.subplots_adjust(bottom=0.2)
     plt.xlim(-300, 300)
     plt.ylim(-300, 300)
     ax.set_aspect(1)
@@ -264,38 +263,5 @@ radius = 25
 nodeRadius = 30
 
 line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo, ax)
-
-
-axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-ratioSlider = Slider(
-    ax=axRatio,
-    label="Control point ratio",
-    valmin=0.00001,
-    valmax=2,
-    valinit=1,
-)
-axRatio2 = fig.add_axes([0.25, 0.05, 0.65, 0.03])
-ratioSlider2 = Slider(
-    ax=axRatio2,
-    label="Other points ratio",
-    valmin=0.00001,
-    valmax=2,
-    valinit=1,
-)
-
-
-def update(val):
-    ratioControlPoint = ratioSlider.val
-    ratioOther = ratioSlider2.val
-    bezierInfo["ratios"] = [ratioOther, ratioControlPoint, ratioOther]
-    coords = calculateBezierPlotPointsBySegments(bezierInfo, 40)
-    Xs = [coordPair[0] for coordPair in coords]
-    Ys = [coordPair[1] for coordPair in coords]
-    line.set_xdata(Xs)
-    line.set_ydata(Ys)
-
-
-ratioSlider.on_changed(update)
-ratioSlider2.on_changed(update)
 
 plt.show()
