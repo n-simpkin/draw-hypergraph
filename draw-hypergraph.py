@@ -30,8 +30,8 @@ def setUpMatplotCanvas():
 
 def setUpNodeDicts(nodeCoords):
     nodesInfo = []
-    keys = ["coords", "unitVector", "associatedPolygonPoint", "t"]
-    vals = [None for i in range(4)]
+    keys = ["coords", "unitVector", "associatedPolygonPoint"]
+    vals = [None for i in range(3)]
 
     for i, node in enumerate(np.array(nodeCoords)):
         nodesInfo.append(dict(zip(keys, vals)))
@@ -99,40 +99,6 @@ def calculateCircleConnectionPoint(node1, node2, radius, centroid):  # Should be
     )  # All this will have been performed with the centre as 0,0, so translate the point so its in relation to the centorid
     plt.plot(circlePoint[0], circlePoint[1], "yo")
     return circlePoint
-
-
-def calculateBezierControlPoint(
-    nodeFrom, nodeTo, centroid, radius
-):  # should give t value?
-    circleConnectionPoint = calculateCircleConnectionPoint(
-        nodeFrom, nodeTo, radius, centroid
-    )
-    nodeFromDist = magnitude(np.subtract(nodeFrom["coords"], circleConnectionPoint))
-    nodeToDist = magnitude(np.subtract(nodeTo["coords"], circleConnectionPoint))
-    ratioDivisor = nodeToDist + nodeFromDist
-
-    # To get the right t value I need the smaller value divided by the sum, so just chekcing for that.
-    if nodeFromDist > nodeToDist:
-        t = nodeToDist / ratioDivisor
-    else:
-        t = nodeFromDist / ratioDivisor
-    nodeFrom["t"] = t
-
-    # Calculates where to put the control point if I want the curve to start at nodeFrom polygon point, end at nodeTo polygon point, and have the turning point at the circle connection point.
-    # Theory for this is written in full in my first notebook and mainly sourced from https://pomax.github.io/bezierinfo/
-    # Bezier equation for a quadratic is (where x(t) is a function) x(t) = X1(1-t)^2 + (X2)(2)(1-t)(t) + (X3)(t^2).
-    # Rearranged for X3 - The control point - this is X2 = (x(t) - X1(1-t)^2 - (X3)(t^2))/ (2)(1-t)(t)
-    return [
-        (
-            circleConnectionPoint[i]
-            - nodeFrom["associatedPolygonPoint"][i]
-            + (2 * nodeFrom["associatedPolygonPoint"][i] * t)
-            - (nodeFrom["associatedPolygonPoint"][i] * (t**2))
-            - (nodeTo["associatedPolygonPoint"][i] * (t**2))
-        )
-        / (2 * (t - (t**2)))
-        for i in range(2)
-    ]
 
 
 # def calculateBezierRatios(nodeFrom, nodeTo, centroid):
@@ -211,12 +177,6 @@ def calculateBezierPlotPointsBySegments(
 #     ratio = ratioSlider.val
 
 
-def drawCentreCurve(curveVerts):
-    codes = [Path.MOVETO, Path.CURVE3, Path.CURVE3]
-    bezier1 = patches.PathPatch(Path(curveVerts, codes), fc="none")
-    ax.add_patch(bezier1)
-
-
 def drawNodeToPolygonLine(nodeCoords, polygonPointCoords):
     plt.plot(
         (nodeCoords[0], polygonPointCoords[0]),
@@ -229,10 +189,9 @@ def drawDashedLine(pointFrom, pointTo):
     plt.plot((pointFrom[0], pointTo[0]), (pointFrom[1], pointTo[1]), "--")
 
 
-def drawCircle(coords, radius, ax):
+def drawCircle(coords, radius):
     circle = plt.Circle((coords[0], coords[1]), radius, fc="white", ec="black")
     ax.add_patch(circle)
-    return ax
 
 
 def drawPoints(points):
@@ -250,13 +209,13 @@ def drawBezierBySegments(coords):
 fig, ax = setUpMatplotCanvas()
 
 
-def drawEdge(radius, nodeRadius, nodesInfo, ax, ratios):  # 2 edgecase and 1
+def drawEdge(radius, nodeRadius, nodesInfo, ax):  # 2 edgecase and 1
     polygonPointDistance = 0.6
 
     for node in nodesInfo:
-        ax = drawCircle(node["coords"], nodeRadius, ax)
+        drawCircle(node["coords"], nodeRadius)
     centroid = findCentroid([node["coords"] for node in nodesInfo])
-    drawCircle(centroid, radius, ax)
+    drawCircle(centroid, radius)
     polygonPoints = calculatePolygonPoints(
         nodesInfo, centroid, radius, polygonPointDistance
     )
@@ -273,9 +232,7 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax, ratios):  # 2 edgecase and 1
             ],
             "ratios": [1, 1, 1],
         }
-        # controlPoint = calculateBezierControlPoint(nodeFrom, nodeTo, centroid, radius)
-        controlPoint = centroid
-        # plt.plot(controlPoint[0], controlPoint[1], "bo")
+
         nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
             nodeFrom["coords"], nodeTo["coords"], centroid
         )
@@ -287,13 +244,6 @@ def drawEdge(radius, nodeRadius, nodesInfo, ax, ratios):  # 2 edgecase and 1
         )
 
         bezierCoords = calculateBezierPlotPointsBySegments(bezierInfo, 40)
-        # drawCentreCurve(
-        #     [
-        #         nodeFrom["associatedPolygonPoint"],
-        #         controlPoint,
-        #         nodeTo["associatedPolygonPoint"],
-        #     ]
-        # )
         line = drawBezierBySegments(bezierCoords)
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
@@ -313,7 +263,7 @@ nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
 radius = 25
 nodeRadius = 30
 
-line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo, ax, [1, 1, 1])
+line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo, ax)
 
 
 axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
