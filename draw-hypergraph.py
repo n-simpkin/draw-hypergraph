@@ -170,19 +170,11 @@ def calculateBezierPlotPointsBySegments(
     return coords
 
 
-def calculateTP(
-    nodeFromCoords, nodeToCoords, centroid, bezierInfo
-):  # Using centroid is a bit wrong as should be circle connecion point, but I don't have that anymore and I'm a bit lazy.
-    nodeFromDist = magnitude(np.subtract(nodeFromCoords, centroid))
-    nodeToDist = magnitude(np.subtract(nodeToCoords, centroid))
-    ratioDivisor = nodeToDist + nodeFromDist
-
-    if nodeFromDist > nodeToDist:
-        t = nodeToDist / ratioDivisor
-    else:
-        t = nodeFromDist / ratioDivisor
-
-    coords = calcRationalBezierPoint(t, bezierInfo["weights"], bezierInfo["ratios"])
+def calculateTP(nodesToCentroidDistanceRatio, bezierInfo):
+    # Using centroid is a bit wrong as should be circle connecion point, but I don't have that anymore and I'm a bit lazy.
+    coords = calcRationalBezierPoint(
+        nodesToCentroidDistanceRatio, bezierInfo["weights"], bezierInfo["ratios"]
+    )
 
     return coords
 
@@ -269,14 +261,11 @@ def drawEdge(
         nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
             nodeFrom["coords"], nodeTo["coords"], centroid
         )
-        calculateRatioPointBetweenNodes(
-            nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
-        )
         ratioPoint = calculateRatioPointBetweenNodes(
             nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
         )
         turningPoint = calculateTP(
-            nodeFrom["coords"], nodeTo["coords"], centroid, beziersInfo[nodeFromIndex]
+            nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
         )
 
         bezierCoords = calculateBezierPlotPointsBySegments(
@@ -347,9 +336,13 @@ def update(val):
         line.set_ydata(Ys)
 
     for i, tpObj in enumerate(turningPoints):
-        tp = calculateTP(
-            nodesList[i], nodesList[(i + 1) % len(nodesList)], centre, beziersInfo[i]
+        # tp = calculateTP(
+        #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre, beziersInfo[i]
+        # )
+        nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
+            nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
         )
+        tp = calculateTP(nodesToCentroidDistanceRatio, beziersInfo[i])
         tpObj.set_xdata([tp[0]])
         tpObj.set_ydata([tp[1]])
 
