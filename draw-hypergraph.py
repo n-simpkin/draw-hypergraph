@@ -219,21 +219,23 @@ def drawBezierBySegments(coords):
 fig, ax = setUpMatplotCanvas()
 
 
-def drawEdge(radius, nodeRadius, nodesList):  # 2 edgecase and 1
+def drawEdge(radius, nodeRadius, nodesList, polygonPointDistance):  # 2 edgecase and 1
     nodesInfo = setUpNodeDicts(nodesList)
-    polygonPointDistance = 0.6
     beziersInfo = setUpBeziersDicts(len(nodesInfo))
 
     for node in nodesInfo:
         drawCircle(node["coords"], nodeRadius)
+
     centroid = findCentroid([node["coords"] for node in nodesInfo])
     drawCircle(centroid, radius)
     polygonPoints = calculatePolygonPoints(
         nodesInfo, centroid, radius, polygonPointDistance
     )
-    # drawPoints(polygonPoints)
+    drawPoints(polygonPoints)
 
-    for nodeFromIndex in range(len(nodesInfo) - 2):
+    linesManipulatable = []
+
+    for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
         beziersInfo[nodeFromIndex]["weights"] = (
@@ -241,7 +243,7 @@ def drawEdge(radius, nodeRadius, nodesList):  # 2 edgecase and 1
             centroid,
             nodeTo["associatedPolygonPoint"],
         )
-        beziersInfo[nodeFromIndex]["ratios"] = [1, 1, 1]
+        beziersInfo[nodeFromIndex]["ratios"] = [1, 1, 1]  # Initialise as normal bezier
 
         nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
             nodeFrom["coords"], nodeTo["coords"], centroid
@@ -256,14 +258,14 @@ def drawEdge(radius, nodeRadius, nodesList):  # 2 edgecase and 1
         bezierCoords = calculateBezierPlotPointsBySegments(
             beziersInfo[nodeFromIndex], 40
         )
-        line = drawBezierBySegments(bezierCoords)
+        linesManipulatable.append(drawBezierBySegments(bezierCoords))
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
         drawDashedLine(nodeFrom["coords"], nodeTo["coords"])
         drawDashedLine(ratioPoint, centroid)
         drawDashedLine(nodeFrom["coords"], centroid)
         drawPoints([ratioPoint])
-    return line, beziersInfo
+    return linesManipulatable, beziersInfo
 
 
 # nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
@@ -274,8 +276,9 @@ nodesList = [[-260, 220], [260, 220], [0, -220]]
 
 radius = 25
 nodeRadius = 30
+polygonPointDistance = 0.6
 
-line, beziersInfo = drawEdge(radius, nodeRadius, nodesList)
+lines, beziersInfo = drawEdge(radius, nodeRadius, nodesList, polygonPointDistance)
 lastCurveTemp = 0
 
 
@@ -300,12 +303,23 @@ ratioSlider2 = Slider(
 def update(val):
     ratioControlPoint = ratioSlider.val
     ratioOther = ratioSlider2.val
-    beziersInfo[lastCurveTemp]["ratios"] = [ratioOther, ratioControlPoint, ratioOther]
-    coords = calculateBezierPlotPointsBySegments(beziersInfo[lastCurveTemp], 40)
-    Xs = [coordPair[0] for coordPair in coords]
-    Ys = [coordPair[1] for coordPair in coords]
-    line.set_xdata(Xs)
-    line.set_ydata(Ys)
+    # beziersInfo[lastCurveTemp]["ratios"] = [ratioOther, ratioControlPoint, ratioOther]
+    # coords = calculateBezierPlotPointsBySegments(beziersInfo[lastCurveTemp], 40)
+    # Xs = [coordPair[0] for coordPair in coords]
+    # Ys = [coordPair[1] for coordPair in coords]
+    # line.set_xdata(Xs)
+    # line.set_ydata(Ys)
+    for i, line in enumerate(lines):
+        beziersInfo[i]["ratios"] = [
+            ratioOther,
+            ratioControlPoint,
+            ratioOther,
+        ]
+        coords = calculateBezierPlotPointsBySegments(beziersInfo[i], 40)
+        Xs = [coordPair[0] for coordPair in coords]
+        Ys = [coordPair[1] for coordPair in coords]
+        line.set_xdata(Xs)
+        line.set_ydata(Ys)
 
 
 ratioSlider.on_changed(update)
