@@ -38,6 +38,16 @@ def setUpNodeDicts(nodeCoords):
     return nodesInfo
 
 
+def setUpBeziersDicts(numOfCurves):
+    beziersInfo = []
+    keys = ["weights", "ratios"]
+    vals = [None for i in range(2)]
+
+    for i in range(numOfCurves):
+        beziersInfo.append(dict(zip(keys, vals)))
+    return beziersInfo
+
+
 # CALCULATION TOOLS
 
 
@@ -208,8 +218,9 @@ def drawBezierBySegments(coords):
 fig, ax = setUpMatplotCanvas()
 
 
-def drawEdge(radius, nodeRadius, nodesInfo):  # 2 edgecase and 1
-    polygonPointDistance = 0.6
+def drawEdge(radius, nodeRadius, nodesList, polygonPointDistance):  # 2 edgecase and 1
+    nodesInfo = setUpNodeDicts(nodesList)
+    beziersInfo = setUpBeziersDicts(len(nodesInfo))
 
     for node in nodesInfo:
         drawCircle(node["coords"], nodeRadius)
@@ -223,14 +234,12 @@ def drawEdge(radius, nodeRadius, nodesInfo):  # 2 edgecase and 1
     for nodeFromIndex in range(len(nodesInfo) - 2):
         nodeFrom = nodesInfo[nodeFromIndex]
         nodeTo = nodesInfo[(nodeFromIndex + 1) % len(nodesInfo)]
-        bezierInfo = {
-            "weights": [
-                nodeFrom["associatedPolygonPoint"],
-                centroid,
-                nodeTo["associatedPolygonPoint"],
-            ],
-            "ratios": [1, 1, 1],
-        }
+        beziersInfo[nodeFromIndex]["weights"] = (
+            nodeFrom["associatedPolygonPoint"],
+            centroid,
+            nodeTo["associatedPolygonPoint"],
+        )
+        beziersInfo[nodeFromIndex]["ratios"] = [1, 1, 1]  # Initialise as normal bezier
 
         nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
             nodeFrom["coords"], nodeTo["coords"], centroid
@@ -242,7 +251,9 @@ def drawEdge(radius, nodeRadius, nodesInfo):  # 2 edgecase and 1
             nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
         )
 
-        bezierCoords = calculateBezierPlotPointsBySegments(bezierInfo, 40)
+        bezierCoords = calculateBezierPlotPointsBySegments(
+            beziersInfo[nodeFromIndex], 40
+        )
         line = drawBezierBySegments(bezierCoords)
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
@@ -250,18 +261,18 @@ def drawEdge(radius, nodeRadius, nodesInfo):  # 2 edgecase and 1
         drawDashedLine(ratioPoint, centroid)
         drawDashedLine(nodeFrom["coords"], centroid)
         drawPoints([ratioPoint])
-    return line, bezierInfo
 
 
 # nodesInfo = setUpNodeDicts([[-260, 220], [90, 90], [260, -220], [-260, -150]])
-nodesInfo = setUpNodeDicts([[-260, 220], [260, 220], [0, -220]])
+nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesInfo = setUpNodeDicts([[260, 220], [100, 0], [260, -220]])
-###nodesInfo = setUpNodeDicts([[260,220],[260,-220]])
+# nodesInfo = setUpNodeDicts([[260,220],[260,-220]])
 # nodesInfo = setUpNodeDicts([[-260, 220], [130, 500], [260, 220]])
 
 radius = 25
 nodeRadius = 30
+polygonPointDistance = 0.6
 
-line, bezierInfo = drawEdge(radius, nodeRadius, nodesInfo)
+drawEdge(radius, nodeRadius, nodesList, polygonPointDistance)
 
 plt.show()
