@@ -349,6 +349,7 @@ ratioSlider.on_changed(update)
 ratioSliderLeft.on_changed(update)
 ratioSliderRight.on_changed(update)
 
-plt.show()
+# As seen, if the left and right have the same slider value, tp is at t of the ratio between thier distances from the centre. Otherwise, one side is weighted and tp becomes less predictable. What I need is satisfied by moving left and right ratios together.
+# dfgf
 
 plt.show()
