@@ -111,11 +111,6 @@ def calculateCircleConnectionPoint(node1, node2, radius, centroid):  # Should be
     return circlePoint
 
 
-# def calculateBezierRatios(nodeFrom, nodeTo, centroid):
-
-#     return [nodeFrom["associatedPolygonPoints"], centroid, nodeTo["associatedPolygonPoints"]]
-
-
 def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid):
     nodeFromDist = magnitude(np.subtract(nodeFromCoords, centroid))
     nodeToDist = magnitude(np.subtract(nodeToCoords, centroid))
@@ -130,16 +125,23 @@ def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid
     return nodesToCentroidDistanceRatio
 
 
-def calculateRatioPointBetweenNodes(
-    nodeFromCoords, nodeToCoords, nodesToCentroidDistanceRatio
-):
-    nodeToNodeVector = np.subtract(nodeToCoords, nodeFromCoords)  # This is right
-    nodeToNodeDist = magnitude(nodeToNodeVector)
-    nodeToNodeDirection = makeUnitVector(nodeToNodeVector)
+# def calculateRatioPointBetweenNodes(
+#     nodeFromCoords, nodeToCoords, nodesToCentroidDistanceRatio
+# ):
+#     nodeToNodeVector = np.subtract(nodeToCoords, nodeFromCoords)  # This is right
+#     nodeToNodeDist = magnitude(nodeToNodeVector)
+#     nodeToNodeDirection = makeUnitVector(nodeToNodeVector)
 
-    ratioPoint = nodeToNodeDirection * (nodeToNodeDist * nodesToCentroidDistanceRatio)
-    ratioPoint = nodeFromCoords + ratioPoint
-    return ratioPoint
+#     ratioPoint = nodeToNodeDirection * (nodeToNodeDist * nodesToCentroidDistanceRatio)
+#     ratioPoint = nodeFromCoords + ratioPoint
+#     return ratioPoint
+
+
+def calculateRatioPointBetweenNodes(nodesToCentroidDistanceRatio, bezierInfo):
+    coords = calcRationalBezierPoint(
+        nodesToCentroidDistanceRatio, bezierInfo["weights"], [1, 0, 1]
+    )
+    return coords
 
 
 def calcRationalBezierPoint(t, weights, ratios):
@@ -180,20 +182,6 @@ def calculateTP(nodesToCentroidDistanceRatio, bezierInfo):
 
 
 # DRAW
-
-
-# def addSlider():
-#     axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-#     ratioSlider = Slider(
-#         ax=axRatio,
-#         label="Control point ratio",
-#         valmin=0,
-#         valmax=2,
-#         valinit=1,
-#     )
-
-# def update(val):
-#     ratio = ratioSlider.val
 
 
 def drawNodeToPolygonLine(nodeCoords, polygonPointCoords):
@@ -262,7 +250,7 @@ def drawEdge(
             nodeFrom["coords"], nodeTo["coords"], centroid
         )
         ratioPoint = calculateRatioPointBetweenNodes(
-            nodeFrom["coords"], nodeTo["coords"], nodesToCentroidDistanceRatio
+            nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
         )
         turningPoint = calculateTP(
             nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
@@ -283,8 +271,8 @@ def drawEdge(
     return linesManipulatable, beziersInfo, turningPointsManipulatable
 
 
-# nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
-nodesList = [[-260, 220], [260, 220], [0, -220]]
+nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
+# nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
