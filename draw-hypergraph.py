@@ -115,12 +115,7 @@ def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid
     nodeFromDist = magnitude(np.subtract(nodeFromCoords, centroid))
     nodeToDist = magnitude(np.subtract(nodeToCoords, centroid))
     ratioDivisor = nodeToDist + nodeFromDist
-
-    # To get the right t value I need the smaller value divided by the sum, so just chekcing for that.
-    if nodeFromDist > nodeToDist:
-        nodesToCentroidDistanceRatio = nodeToDist / ratioDivisor
-    else:
-        nodesToCentroidDistanceRatio = nodeFromDist / ratioDivisor
+    nodesToCentroidDistanceRatio = nodeFromDist / ratioDivisor
 
     return nodesToCentroidDistanceRatio
 
@@ -249,6 +244,7 @@ def drawEdge(
         nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
             nodeFrom["coords"], nodeTo["coords"], centroid
         )
+        print(nodesToCentroidDistanceRatio)
         ratioPoint = calculateRatioPointBetweenNodes(
             nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
         )
@@ -280,7 +276,7 @@ nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
 centroid = findCentroid(nodesList)
 centre = centroid
 
-radius = 25
+radius = 100
 nodeRadius = 30
 polygonPointDistance = 1
 
