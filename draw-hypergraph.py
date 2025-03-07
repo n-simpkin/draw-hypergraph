@@ -290,7 +290,7 @@ lines, beziersInfo, turningPoints = drawEdge(
 lastCurveTemp = 0
 
 
-axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
+axRatio = fig.add_axes([0.25, 0.05, 0.65, 0.03])
 ratioSlider = Slider(
     ax=axRatio,
     label="Control point ratio",
@@ -298,10 +298,19 @@ ratioSlider = Slider(
     valmax=2,
     valinit=1,
 )
-axRatio2 = fig.add_axes([0.25, 0.05, 0.65, 0.03])
-ratioSlider2 = Slider(
+axRatio2 = fig.add_axes([0.25, 0.1, 0.65, 0.03])
+ratioSliderLeft = Slider(
     ax=axRatio2,
-    label="Other points ratio",
+    label="Left point ratio",
+    valmin=0.00001,
+    valmax=2,
+    valinit=1,
+)
+
+axRatio3 = fig.add_axes([0.25, 0, 0.65, 0.03])
+ratioSliderRight = Slider(
+    ax=axRatio3,
+    label="Right point ratio",
     valmin=0.00001,
     valmax=2,
     valinit=1,
@@ -310,12 +319,13 @@ ratioSlider2 = Slider(
 
 def update(val):
     ratioControlPoint = ratioSlider.val
-    ratioOther = ratioSlider2.val
+    ratioLeft = ratioSliderLeft.val
+    ratioRight = ratioSliderRight.val
     for i, line in enumerate(lines):
         beziersInfo[i]["ratios"] = [
-            ratioOther,
+            ratioLeft,
             ratioControlPoint,
-            ratioOther,
+            ratioRight,
         ]
         coords = calculateBezierPlotPointsBySegments(beziersInfo[i], 40)
         Xs = [coordPair[0] for coordPair in coords]
@@ -336,6 +346,9 @@ def update(val):
 
 
 ratioSlider.on_changed(update)
-ratioSlider2.on_changed(update)
+ratioSliderLeft.on_changed(update)
+ratioSliderRight.on_changed(update)
+
+plt.show()
 
 plt.show()
