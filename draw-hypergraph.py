@@ -178,17 +178,23 @@ def calculateBezierPlotPointsBySegments(
 
 def calculateTP(bezierInfo):
     w0, w1, w2 = bezierInfo["weights"]
-    t = (w0 - w1) / (w0 + w2 - 2 * w1)
+    # t = 2*(w0 - w1) / (w0 + w2 - 2 * w1)
+    t = ((2 * w0) - (2 * w1)) / ((2 * w0) + (2 * w2) - (4 * w1))
     print("t", t)
     # print("m", magnitude(t))
     # print("uv", makeUnitVector(t))
     # How do I get t to not be a coord pair?
+    # I think the multiple soluions are bc the curve has two solutions for where the gradient is 0, however one is not in the interval so we don't care.
     if t[0] >= 0 and t[0] <= 1:
         t = t[0]
     elif t[1] >= 0 and t[1] <= 1:
         t = t[1]
     else:
-        t = 2  # raise error
+        print("t error")  # raise error
+
+    # print('grad at "tp"', ((1 - t) * (w1 - w0) + (t) * (w2 - w1)))
+    print("grad at tp", (1 - t) * 2 * (w1 - w0) + t * 2 * (w2 - w1))
+    # Gives non zero so something in my gradient finding is wrong.
 
     coords = calcRationalBezierPoint(t, bezierInfo["weights"], bezierInfo["ratios"])
     return coords
