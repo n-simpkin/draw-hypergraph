@@ -167,12 +167,30 @@ def calculateBezierPlotPointsBySegments(
     return coords
 
 
-def calculateTP(nodesToCentroidDistanceRatio, bezierInfo):
-    # Using centroid is a bit wrong as should be circle connecion point, but I don't have that anymore and I'm a bit lazy.
-    coords = calcRationalBezierPoint(
-        nodesToCentroidDistanceRatio, bezierInfo["weights"], bezierInfo["ratios"]
-    )
+# def calculateTP(nodesToCentroidDistanceRatio, bezierInfo):
+#     # Using centroid is a bit wrong as should be circle connecion point, but I don't have that anymore and I'm a bit lazy.
+#     coords = calcRationalBezierPoint(
+#         nodesToCentroidDistanceRatio, bezierInfo["weights"], bezierInfo["ratios"]
+#     )
 
+#     return coords
+
+
+def calculateTP(bezierInfo):
+    w0, w1, w2 = bezierInfo["weights"]
+    t = (w0 - w1) / (w0 + w2 - 2 * w1)
+    print("t", t)
+    # print("m", magnitude(t))
+    # print("uv", makeUnitVector(t))
+    # How do I get t to not be a coord pair?
+    if t[0] >= 0 and t[0] <= 1:
+        t = t[0]
+    elif t[1] >= 0 and t[1] <= 1:
+        t = t[1]
+    else:
+        t = 2  # raise error
+
+    coords = calcRationalBezierPoint(t, bezierInfo["weights"], bezierInfo["ratios"])
     return coords
 
 
@@ -230,6 +248,7 @@ def drawEdge(
 
     linesManipulatable = []
     turningPointsManipulatable = []
+    tSliderPoints = []
 
     for nodeFromIndex in range(len(nodesInfo)):
         nodeFrom = nodesInfo[nodeFromIndex]
@@ -248,9 +267,7 @@ def drawEdge(
         ratioPoint = calculateRatioPointBetweenNodes(
             nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
         )
-        turningPoint = calculateTP(
-            nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
-        )
+        turningPoint = calculateTP(beziersInfo[nodeFromIndex])
 
         bezierCoords = calculateBezierPlotPointsBySegments(
             beziersInfo[nodeFromIndex], 40
@@ -264,7 +281,27 @@ def drawEdge(
 
         drawPoints([ratioPoint])
         turningPointsManipulatable.append(drawPoints([turningPoint], "go"))
-    return linesManipulatable, beziersInfo, turningPointsManipulatable
+        tSliderPoints.append(
+            drawPoints(
+                [
+                    calcRationalBezierPoint(
+                        0.5,
+                        beziersInfo[nodeFromIndex]["weights"],
+                        beziersInfo[nodeFromIndex]["ratios"],
+                    )
+                ],
+                "bo",
+            )
+        )
+        # print(
+        #     "rbp",
+        #     calcRationalBezierPoint(
+        #         0.5,
+        #         beziersInfo[nodeFromIndex]["weights"],
+        #         beziersInfo[nodeFromIndex]["ratios"],
+        #     ),
+        # )
+    return linesManipulatable, beziersInfo, turningPointsManipulatable, tSliderPoints
 
 
 nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
@@ -280,10 +317,9 @@ radius = 100
 nodeRadius = 30
 polygonPointDistance = 1
 
-lines, beziersInfo, turningPoints = drawEdge(
+lines, beziersInfo, turningPoints, tSliderPoints = drawEdge(
     radius, nodeRadius, nodesList, polygonPointDistance, centre
 )
-lastCurveTemp = 0
 
 
 axRatio = fig.add_axes([0.25, 0.1, 0.65, 0.03])
@@ -303,10 +339,20 @@ ratioSlider2 = Slider(
     valinit=1,
 )
 
+axTSlider = fig.add_axes([0.25, 0, 0.65, 0.03])
+tSlider = Slider(
+    ax=axTSlider,
+    label="t",
+    valmin=0.00001,
+    valmax=1,
+    valinit=0.5,
+)
+
 
 def update(val):
     ratioControlPoint = ratioSlider.val
     ratioOther = ratioSlider2.val
+    setT = tSlider.val
     for i, line in enumerate(lines):
         beziersInfo[i]["ratios"] = [
             ratioOther,
@@ -323,15 +369,23 @@ def update(val):
         # tp = calculateTP(
         #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre, beziersInfo[i]
         # )
-        nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
-            nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
-        )
-        tp = calculateTP(nodesToCentroidDistanceRatio, beziersInfo[i])
+        # nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
+        #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
+        # )
+        tp = calculateTP(beziersInfo[i])
         tpObj.set_xdata([tp[0]])
         tpObj.set_ydata([tp[1]])
+
+    for i, pointAtTObj in enumerate(tSliderPoints):
+        coordsAtT = calcRationalBezierPoint(
+            setT, beziersInfo[i]["weights"], beziersInfo[i]["ratios"]
+        )
+        pointAtTObj.set_xdata([coordsAtT[0]])
+        pointAtTObj.set_ydata([coordsAtT[1]])
 
 
 ratioSlider.on_changed(update)
 ratioSlider2.on_changed(update)
+tSlider.on_changed(update)
 
 plt.show()
