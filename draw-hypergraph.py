@@ -182,19 +182,21 @@ def calculateTP(bezierInfo):
     t = ((2 * w0) - (2 * w1)) / ((2 * w0) + (2 * w2) - (4 * w1))
     print("t", t)
 
-    if t[0] < 0:
-        t[0] = 0.0001
-    elif t[0] > 1:
-        t[0] = 1
+    # t = t[1]  # Just x tp or just y tp doesn't work.
 
-    if t[1] < 0:
-        t[1] = 0.0001
-    elif t[1] > 1:
-        t[1] = 1
+    # if t[0] < 0:
+    #     t[0] = 0.0001
+    # elif t[0] > 1:
+    #     t[0] = 1
 
-    t = t[1] / t[0]
+    # if t[1] < 0:
+    #     t[1] = 0.0001
+    # elif t[1] > 1:
+    #     t[1] = 1
+
+    # t = t[1] / t[0]
     print("div t", t)  # 0.5657
-    t = 0.5657
+    # t = 0.5657
     # print("m", magnitude(t))
     # print("uv", makeUnitVector(t))
     # How do I get t to not be a coord pair?
@@ -325,8 +327,8 @@ def drawEdge(
     return linesManipulatable, beziersInfo, turningPointsManipulatable, tSliderPoints
 
 
-nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
-# nodesList = [[-260, 220], [260, 220], [0, -220]]
+# nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
+nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
