@@ -1,9 +1,9 @@
-from math import atan, cos, degrees, pi, radians, sin, sqrt
+from math import sqrt
+from random import randint
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np  # rewrite all wiht numpy arrays, eliminates all my clunky two generators, much more semantic.
-from matplotlib.path import Path
 from matplotlib.widgets import Slider
 
 """
@@ -14,6 +14,15 @@ Consider structure
 Hypergraph class for holding the information?
 
 """
+
+# EXPERIMENT
+
+
+def genNodes(num):
+    nodes = []
+    for node in range(num):
+        nodes.append(np.array([randint(-280, 280), randint(-280, 280)]))
+    return nodes
 
 
 # SETUP
@@ -180,6 +189,7 @@ def calculateTP(bezierInfo):
     w0, w1, w2 = bezierInfo["weights"]
     # t = 2*(w0 - w1) / (w0 + w2 - 2 * w1)
     t = ((2 * w0) - (2 * w1)) / ((2 * w0) + (2 * w2) - (4 * w1))
+    t = 0.494  # first one
     print("t", t)
 
     # t = t[1]  # Just x tp or just y tp doesn't work.
@@ -328,15 +338,17 @@ def drawEdge(
 
 
 # nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
-nodesList = [[-260, 220], [260, 220], [0, -220]]
+# nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
+nodesList = genNodes(3)
+print(nodesList)
 
 centroid = findCentroid(nodesList)
 centre = centroid
 
-radius = 100
+radius = 20
 nodeRadius = 30
 polygonPointDistance = 1
 
