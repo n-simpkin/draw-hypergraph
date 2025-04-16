@@ -125,6 +125,7 @@ def calculateRatioBetweenNodesAndCentroid(nodeFromCoords, nodeToCoords, centroid
     nodeToDist = magnitude(np.subtract(nodeToCoords, centroid))
     ratioDivisor = nodeToDist + nodeFromDist
     nodesToCentroidDistanceRatio = nodeFromDist / ratioDivisor
+    print("dist ratio", nodesToCentroidDistanceRatio)
 
     return nodesToCentroidDistanceRatio
 
@@ -190,7 +191,7 @@ def calculateTP(bezierInfo):
     # t = 2*(w0 - w1) / (w0 + w2 - 2 * w1)
     t = ((2 * w0) - (2 * w1)) / ((2 * w0) + (2 * w2) - (4 * w1))
     t = 0.494  # first one
-    print("t", t)
+    # print("t", t)
 
     # t = t[1]  # Just x tp or just y tp doesn't work.
 
@@ -205,7 +206,7 @@ def calculateTP(bezierInfo):
     #     t[1] = 1
 
     # t = t[1] / t[0]
-    print("div t", t)  # 0.5657
+    # print("div t", t)  # 0.5657
     # t = 0.5657
     # print("m", magnitude(t))
     # print("uv", makeUnitVector(t))
@@ -220,7 +221,7 @@ def calculateTP(bezierInfo):
     #     print("t error")  # raise error
 
     # print('grad at "tp"', ((1 - t) * (w1 - w0) + (t) * (w2 - w1)))
-    print("grad at tp", ((1 - t) * 2 * (w1 - w0)) + (t * 2 * (w2 - w1)))
+    # print("grad at tp", ((1 - t) * 2 * (w1 - w0)) + (t * 2 * (w2 - w1)))
     # Gives non zero so something in my gradient finding is wrong.
 
     coords = calcRationalBezierPoint(t, bezierInfo["weights"], bezierInfo["ratios"])
@@ -280,7 +281,7 @@ def drawEdge(
     drawPoints(polygonPoints)
 
     linesManipulatable = []
-    turningPointsManipulatable = []
+    closestPointsManipulatable = []
     tSliderPoints = []
 
     for nodeFromIndex in range(len(nodesInfo)):
@@ -297,10 +298,15 @@ def drawEdge(
             nodeFrom["coords"], nodeTo["coords"], centroid
         )
         print(nodesToCentroidDistanceRatio)
-        ratioPoint = calculateRatioPointBetweenNodes(
-            nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
+        # ratioPoint = calculateRatioPointBetweenNodes(
+        #     nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
+        # )
+        # turningPoint = calculateTP(beziersInfo[nodeFromIndex])
+        closestPoint = calcRationalBezierPoint(
+            nodesToCentroidDistanceRatio,
+            beziersInfo[nodeFromIndex]["weights"],
+            beziersInfo[nodeFromIndex]["ratios"],
         )
-        turningPoint = calculateTP(beziersInfo[nodeFromIndex])
 
         bezierCoords = calculateBezierPlotPointsBySegments(
             beziersInfo[nodeFromIndex], 40
@@ -309,11 +315,11 @@ def drawEdge(
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
         drawDashedLine(nodeFrom["coords"], nodeTo["coords"])
-        drawDashedLine(ratioPoint, centroid)
+        # drawDashedLine(ratioPoint, centroid)
         drawDashedLine(nodeFrom["coords"], centroid)
 
-        drawPoints([ratioPoint])
-        turningPointsManipulatable.append(drawPoints([turningPoint], "go"))
+        # drawPoints([closestPoint])
+        closestPointsManipulatable.append(drawPoints([closestPoint], "go"))
         tSliderPoints.append(
             drawPoints(
                 [
@@ -334,15 +340,20 @@ def drawEdge(
         #         beziersInfo[nodeFromIndex]["ratios"],
         #     ),
         # )
-    return linesManipulatable, beziersInfo, turningPointsManipulatable, tSliderPoints
+    return (
+        linesManipulatable,
+        beziersInfo,
+        closestPointsManipulatable,
+        tSliderPoints,
+    )
 
 
-# nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
+nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
 # nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
-nodesList = genNodes(3)
+# nodesList = genNodes(3)
 print(nodesList)
 
 centroid = findCentroid(nodesList)
@@ -352,7 +363,7 @@ radius = 20
 nodeRadius = 30
 polygonPointDistance = 1
 
-lines, beziersInfo, turningPoints, tSliderPoints = drawEdge(
+lines, beziersInfo, closestPoints, tSliderPoints = drawEdge(
     radius, nodeRadius, nodesList, polygonPointDistance, centre
 )
 
@@ -400,16 +411,21 @@ def update(val):
         line.set_xdata(Xs)
         line.set_ydata(Ys)
 
-    for i, tpObj in enumerate(turningPoints):
+    for i, closestPointObj in enumerate(closestPoints):
         # tp = calculateTP(
         #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre, beziersInfo[i]
         # )
-        # nodesToCentroidDistanceRatio = calculateRatioBetweenNodesAndCentroid(
-        #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
-        # )
-        tp = calculateTP(beziersInfo[i])
-        tpObj.set_xdata([tp[0]])
-        tpObj.set_ydata([tp[1]])
+        closestPointRatio = calculateRatioBetweenNodesAndCentroid(
+            nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
+        )
+        # tp = calculateTP(beziersInfo[i])
+        closestPoint = calcRationalBezierPoint(
+            closestPointRatio,
+            beziersInfo[i]["weights"],
+            beziersInfo[i]["ratios"],
+        )
+        closestPointObj.set_xdata([closestPoint[0]])
+        closestPointObj.set_ydata([closestPoint[1]])
 
     for i, pointAtTObj in enumerate(tSliderPoints):
         coordsAtT = calcRationalBezierPoint(
