@@ -228,6 +228,16 @@ def calculateTP(bezierInfo):
     return coords
 
 
+def calcClosestPoint(weights):
+    t = (weights[1] + weights[0]) / ((2 * weights[1]) + weights[0] + weights[2])
+    # t = t[0]
+    if t[0] >= 0 and t[0] <= 1:
+        t = t[0]
+    else:
+        t = t[1]
+    return t
+
+
 # DRAW
 
 
@@ -302,8 +312,15 @@ def drawEdge(
         #     nodesToCentroidDistanceRatio, beziersInfo[nodeFromIndex]
         # )
         # turningPoint = calculateTP(beziersInfo[nodeFromIndex])
+        # closestPoint = calcRationalBezierPoint(
+        #     nodesToCentroidDistanceRatio,
+        #     beziersInfo[nodeFromIndex]["weights"],
+        #     beziersInfo[nodeFromIndex]["ratios"],
+        # )
+        tValOfClosestPoint = calcClosestPoint(beziersInfo[nodeFromIndex]["weights"])
+        print("tval", tValOfClosestPoint)
         closestPoint = calcRationalBezierPoint(
-            nodesToCentroidDistanceRatio,
+            tValOfClosestPoint,
             beziersInfo[nodeFromIndex]["weights"],
             beziersInfo[nodeFromIndex]["ratios"],
         )
@@ -348,12 +365,12 @@ def drawEdge(
     )
 
 
-nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
+# nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
 # nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
-# nodesList = genNodes(3)
+nodesList = genNodes(3)
 print(nodesList)
 
 centroid = findCentroid(nodesList)
@@ -415,12 +432,18 @@ def update(val):
         # tp = calculateTP(
         #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre, beziersInfo[i]
         # )
-        closestPointRatio = calculateRatioBetweenNodesAndCentroid(
-            nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
-        )
-        # tp = calculateTP(beziersInfo[i])
+        # closestPointRatio = calculateRatioBetweenNodesAndCentroid(
+        #     nodesList[i], nodesList[(i + 1) % len(nodesList)], centre
+        # )
+        # # tp = calculateTP(beziersInfo[i])
+        # closestPoint = calcRationalBezierPoint(
+        #     closestPointRatio,
+        #     beziersInfo[i]["weights"],
+        #     beziersInfo[i]["ratios"],
+        # )
+        tValOfClosestPoint = calcClosestPoint(beziersInfo[i]["weights"])
         closestPoint = calcRationalBezierPoint(
-            closestPointRatio,
+            tValOfClosestPoint,
             beziersInfo[i]["weights"],
             beziersInfo[i]["ratios"],
         )
