@@ -1,4 +1,4 @@
-from math import sqrt
+from math import atan, cos, sin, sqrt
 from random import randint
 
 import matplotlib.patches as patches
@@ -227,6 +227,28 @@ def calculateTP(bezierInfo):
     return coords
 
 
+def translateOrigin(bezierInfo):
+    bezierWeightsTranslated = (
+        bezierInfo["weights"] - bezierInfo["weights"][0]
+    )  ##Translates start of curve to origin
+    print("tranls", bezierWeightsTranslated)
+    theta = atan(
+        (-1 * (bezierWeightsTranslated[2][1])) / bezierWeightsTranslated[2][0]
+    )  # Finds the angle to rotate curve by so start and end nodes are on the x axis
+    for i, weight in enumerate(bezierWeightsTranslated):
+        bezierWeightsTranslated[i][0] = weight[0] * cos(theta) - weight[1] * sin(theta)
+        bezierWeightsTranslated[i][1] = weight[0] * sin(theta) + weight[1] * cos(theta)
+        ##Rotate coordinates using rotation matrix
+    print(bezierWeightsTranslated)
+
+
+def calcFurthestPoint(weights):
+    a = 2 * (weights[1] - weights[0])
+    b = 2 * (weights[2] - weights[1])
+    t = (-1 * a) / (b - a)
+    print("furthestPoint", t)
+
+
 # DRAW
 
 
@@ -269,6 +291,7 @@ def drawEdge(
     nodesInfo = setUpNodeDicts(nodesList)
     beziersInfo = setUpBeziersDicts(len(nodesInfo))
     centroid = centre  # Update so everything is centre, cba rn.
+    print(centre)
 
     for node in nodesInfo:
         drawCircle(node["coords"], nodeRadius)
@@ -305,6 +328,10 @@ def drawEdge(
         bezierCoords = calculateBezierPlotPointsBySegments(
             beziersInfo[nodeFromIndex], 40
         )
+
+        calcFurthestPoint(beziersInfo[nodeFromIndex]["weights"])
+        translateOrigin(beziersInfo[nodeFromIndex])
+
         linesManipulatable.append(drawBezierBySegments(bezierCoords))
 
         drawNodeToPolygonLine(nodeFrom["coords"], nodeFrom["associatedPolygonPoint"])
@@ -338,10 +365,12 @@ def drawEdge(
 
 
 # nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
+# nodesList = [[200, 0], [100, 100], [0, 0]]
 # nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
+nodesList = []
 nodesList = genNodes(3)
 print(nodesList)
 
