@@ -1,4 +1,4 @@
-from math import atan, cos, sin, sqrt
+from math import atan, cos, degrees, sin, sqrt
 from random import randint
 
 import matplotlib.patches as patches
@@ -227,17 +227,23 @@ def calculateTP(bezierInfo):
     return coords
 
 
-def translateOrigin(bezierInfo):
+def translateCurveToOrigin(bezierInfo):
     bezierWeightsTranslated = (
         bezierInfo["weights"] - bezierInfo["weights"][0]
     )  ##Translates start of curve to origin
     print("tranls", bezierWeightsTranslated)
+    bezierWeightsTranslated = np.array([[0, 0], [100, 100], [100, -120]])
+
     theta = atan(
-        (-1 * (bezierWeightsTranslated[2][1])) / bezierWeightsTranslated[2][0]
+        (-1 * bezierWeightsTranslated[2][1]) / bezierWeightsTranslated[2][0]
     )  # Finds the angle to rotate curve by so start and end nodes are on the x axis
+    print("theta = r", theta)
     for i, weight in enumerate(bezierWeightsTranslated):
+        print("w", weight[0], weight[1])
         bezierWeightsTranslated[i][0] = weight[0] * cos(theta) - weight[1] * sin(theta)
         bezierWeightsTranslated[i][1] = weight[0] * sin(theta) + weight[1] * cos(theta)
+        print(bezierWeightsTranslated[i][1], "f")
+        # Am I changing the variable I'm using
         ##Rotate coordinates using rotation matrix
     print(bezierWeightsTranslated)
 
@@ -330,7 +336,7 @@ def drawEdge(
         )
 
         calcFurthestPoint(beziersInfo[nodeFromIndex]["weights"])
-        translateOrigin(beziersInfo[nodeFromIndex])
+        translateCurveToOrigin(beziersInfo[nodeFromIndex])
 
         linesManipulatable.append(drawBezierBySegments(bezierCoords))
 
@@ -366,12 +372,12 @@ def drawEdge(
 
 # nodesList = [[-260, 220], [90, 90], [260, -220], [-260, -150]]
 # nodesList = [[200, 0], [100, 100], [0, 0]]
-# nodesList = [[-260, 220], [260, 220], [0, -220]]
+nodesList = [[-260, 220], [260, 220], [0, -220]]
 # nodesList = [[260, 220], [100, 0], [260, -220]]
 # nodesList = [[260,220],[260,-220]]
 # nodesList = [[-260, 220], [130, 500], [260, 220]]
-nodesList = []
-nodesList = genNodes(3)
+# nodesList = []
+# nodesList = genNodes(3)
 print(nodesList)
 
 centroid = findCentroid(nodesList)
